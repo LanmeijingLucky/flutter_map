@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map_example/pages/user_position.dart';
 
 import '../pages/animated_map_controller.dart';
 import '../pages/circle.dart';
@@ -154,6 +155,13 @@ Drawer buildDrawer(BuildContext context, String currentRoute) {
           selected: currentRoute == OverlayImagePage.route,
           onTap: () {
             Navigator.pushReplacementNamed(context, OverlayImagePage.route);
+          },
+        ),
+        ListTile(
+          title: const Text('User position plugin'),
+          selected: currentRoute == UserPostionPage.route,
+          onTap: () {
+            Navigator.pushReplacementNamed(context, UserPostionPage.route);
           },
         ),
       ],

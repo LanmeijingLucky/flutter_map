@@ -26,6 +26,7 @@ class MapControllerImpl implements MapController {
   @override
   void move(LatLng center, double zoom, {bool hasGesture = false}) {
     _state.move(center, zoom, hasGesture: hasGesture);
+    _state.rebuild();
   }
 
   @override
@@ -35,6 +36,7 @@ class MapControllerImpl implements MapController {
         const FitBoundsOptions(padding: EdgeInsets.all(12.0)),
   }) {
     _state.fitBounds(bounds, options);
+    _state.rebuild();
   }
 
   @override
@@ -53,6 +55,7 @@ class MapControllerImpl implements MapController {
   void rotate(double degree) {
     _state.rotation = degree;
     if (onRotationChanged != null) onRotationChanged(degree);
+    _state.rebuild();
   }
 
   @override
@@ -61,7 +64,7 @@ class MapControllerImpl implements MapController {
 
 class MapState {
   MapOptions options;
-  final StreamController<Null> _onMoveSink;
+  final StreamController<Null> _forceRebuild;
 
   double _zoom;
   double rotation;
@@ -77,11 +80,11 @@ class MapState {
   MapState(this.options)
       : rotation = options.rotation,
         _zoom = options.zoom,
-        _onMoveSink = StreamController.broadcast();
+        _forceRebuild = StreamController.broadcast();
 
   CustomPoint _size;
 
-  Stream<Null> get onMoved => _onMoveSink.stream;
+  Stream<Null> get forceRebuild => _forceRebuild.stream;
 
   CustomPoint get size => _size;
 
@@ -105,7 +108,11 @@ class MapState {
   }
 
   void dispose() {
-    _onMoveSink.close();
+    _forceRebuild.close();
+  }
+
+  void rebuild() {
+    _forceRebuild.add(null);
   }
 
   void move(LatLng center, double zoom, {hasGesture = false}) {
@@ -122,7 +129,6 @@ class MapState {
     _lastPixelBounds = getPixelBounds(_zoom);
     _lastBounds = _calculateBounds();
     _pixelOrigin = getNewPixelOrigin(center);
-    _onMoveSink.add(null);
 
     if (options.onPositionChanged != null) {
       options.onPositionChanged(
@@ -277,5 +283,28 @@ class MapState {
     var pixelCenter = project(center, zoom).floor();
     var halfSize = size / (scale * 2);
     return Bounds(pixelCenter - halfSize, pixelCenter + halfSize);
+  }
+}
+
+class MapStateInheritedWidget extends InheritedWidget {
+  final MapState mapState;
+
+  MapStateInheritedWidget({
+    Key key,
+    @required this.mapState,
+    @required Widget child,
+  }) : super(key: key, child: child);
+
+  @override
+  bool updateShouldNotify(MapStateInheritedWidget oldWidget) {
+    return oldWidget.mapState.zoom == mapState.zoom &&
+        oldWidget.mapState.center == mapState.center &&
+        oldWidget.mapState.bounds == mapState.bounds &&
+        oldWidget.mapState.rotation == mapState.rotation;
+  }
+
+  static MapStateInheritedWidget of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<MapStateInheritedWidget>();
   }
 }

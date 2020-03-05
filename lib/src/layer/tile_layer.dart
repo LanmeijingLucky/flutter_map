@@ -12,11 +12,9 @@ import 'package:latlong/latlong.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:tuple/tuple.dart';
 
-import 'layer.dart';
-
 /// Describes the needed properties to create a tile-based layer.
 /// A tile is an image binded to a specific geographical position.
-class TileLayerOptions extends LayerOptions {
+class TileLayerOptions {
   /// Defines the structure to create the URLs for the tiles.
   ///
   /// Example:
@@ -120,24 +118,23 @@ class TileLayerOptions extends LayerOptions {
   ///
   Map<String, String> additionalOptions;
 
-  TileLayerOptions(
-      {this.urlTemplate,
-      this.tileSize = 256.0,
-      this.maxZoom = 18.0,
-      this.zoomReverse = false,
-      this.zoomOffset = 0.0,
-      this.additionalOptions = const <String, String>{},
-      this.subdomains = const <String>[],
-      this.keepBuffer = 2,
-      this.backgroundColor = const Color(0xFFE0E0E0),
-      this.placeholderImage,
-      this.tileProvider = const CachedNetworkTileProvider(),
-      this.tms = false,
-      // ignore: avoid_init_to_null
-      this.wmsOptions = null,
-      this.opacity = 1.0,
-      rebuild})
-      : super(rebuild: rebuild);
+  TileLayerOptions({
+    this.urlTemplate,
+    this.tileSize = 256.0,
+    this.maxZoom = 18.0,
+    this.zoomReverse = false,
+    this.zoomOffset = 0.0,
+    this.additionalOptions = const <String, String>{},
+    this.subdomains = const <String>[],
+    this.keepBuffer = 2,
+    this.backgroundColor = const Color(0xFFE0E0E0),
+    this.placeholderImage,
+    this.tileProvider = const CachedNetworkTileProvider(),
+    this.tms = false,
+    // ignore: avoid_init_to_null
+    this.wmsOptions = null,
+    this.opacity = 1.0,
+  });
 }
 
 class WMSTileLayerOptions {

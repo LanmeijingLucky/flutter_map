@@ -6,16 +6,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/src/map/map.dart';
 import 'package:latlong/latlong.dart' hide Path; // conflict with Path from UI
 
-class PolygonLayerOptions extends LayerOptions {
-  final List<Polygon> polygons;
-  final bool polygonCulling;
-
-  /// screen space culling of polygons based on bounding box
-  PolygonLayerOptions(
-      {this.polygons = const [], this.polygonCulling = false, rebuild})
-      : super(rebuild: rebuild);
-}
-
 class Polygon {
   final List<LatLng> points;
   final List<Offset> offsets = [];
@@ -36,12 +26,11 @@ class Polygon {
   }
 }
 
-class PolygonLayer extends StatelessWidget {
-  final PolygonLayerOptions polygonOpts;
-  final MapState map;
-  final Stream stream;
+class PolygonLayerWidget extends StatelessWidget {
+  final List<Polygon> polygons;
+  final bool polygonCulling;
 
-  PolygonLayer(this.polygonOpts, this.map, this.stream);
+  PolygonLayerWidget({this.polygons = const [], this.polygonCulling = false});
 
   @override
   Widget build(BuildContext context) {
@@ -55,46 +44,41 @@ class PolygonLayer extends StatelessWidget {
   }
 
   Widget _build(BuildContext context, Size size) {
-    return StreamBuilder(
-      stream: stream, // a Stream<void> or null
-      builder: (BuildContext context, _) {
-        var polygons = <Widget>[];
+    var map = MapStateInheritedWidget.of(context).mapState;
+    var children = <Widget>[];
 
-        for (var polygon in polygonOpts.polygons) {
-          polygon.offsets.clear();
-          var i = 0;
+    for (var polygon in polygons) {
+      polygon.offsets.clear();
+      var i = 0;
 
-          if (polygonOpts.polygonCulling &&
-              !polygon.boundingBox.isOverlapping(map.bounds)) {
-            // skip this polygon as it's offscreen
-            continue;
-          }
+      if (polygonCulling && !polygon.boundingBox.isOverlapping(map.bounds)) {
+        // skip this polygon as it's offscreen
+        continue;
+      }
 
-          for (var point in polygon.points) {
-            var pos = map.project(point);
-            pos = pos.multiplyBy(map.getZoomScale(map.zoom, map.zoom)) -
-                map.getPixelOrigin();
-            polygon.offsets.add(Offset(pos.x.toDouble(), pos.y.toDouble()));
-            if (i > 0 && i < polygon.points.length) {
-              polygon.offsets.add(Offset(pos.x.toDouble(), pos.y.toDouble()));
-            }
-            i++;
-          }
-
-          polygons.add(
-            CustomPaint(
-              painter: PolygonPainter(polygon),
-              size: size,
-            ),
-          );
+      for (var point in polygon.points) {
+        var pos = map.project(point);
+        pos = pos.multiplyBy(map.getZoomScale(map.zoom, map.zoom)) -
+            map.getPixelOrigin();
+        polygon.offsets.add(Offset(pos.x.toDouble(), pos.y.toDouble()));
+        if (i > 0 && i < polygon.points.length) {
+          polygon.offsets.add(Offset(pos.x.toDouble(), pos.y.toDouble()));
         }
+        i++;
+      }
 
-        return Container(
-          child: Stack(
-            children: polygons,
-          ),
-        );
-      },
+      children.add(
+        CustomPaint(
+          painter: PolygonPainter(polygon),
+          size: size,
+        ),
+      );
+    }
+
+    return Container(
+      child: Stack(
+        children: children,
+      ),
     );
   }
 }

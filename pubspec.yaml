@@ -4,6 +4,8 @@ version: 0.8.2
 authors:
 - John Ryan <john.p.ryan4@gmail.com>
 homepage: https://github.com/johnpryan/flutter_map
+module:
+  androidX: true
 
 environment:
   sdk: ">=2.6.0 <3.0.0"
